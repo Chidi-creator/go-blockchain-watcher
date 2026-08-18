@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package wallet;
+
+option go_package = "bitbucket.org/zapspace/zap-go-server/protoBuilds/wallet";
+
+// WalletService handles wallet management operations
+service WalletService {
+  // GetWallet retrieves wallet details by ID
+  rpc GetWallet(GetWalletRequest) returns (GetWalletResponse) {}
+  
+  // CreateWallet creates a new wallet
+  rpc CreateWallet(CreateWalletRequest) returns (CreateWalletResponse) {}
+}
+
+// GetWalletRequest contains the ID of the wallet to retrieve
+message GetWalletRequest {
+  string wallet_id = 1;
+}
+
+// GetWalletResponse contains wallet details
+message GetWalletResponse {
+  string status = 1;
+  string message = 2;
+  WalletData wallet = 3;
+  string error = 4;
+}
+
+// CreateWalletRequest contains details for creating a new wallet
+message CreateWalletRequest {
+  string user_id = 1;
+  string name = 2;
+  string seed_phrase = 3;
+}
+
+// CreateWalletResponse contains the result of wallet creation
+message CreateWalletResponse {
+  string status = 1;
+  string message = 2;
+  WalletData wallet = 3;
+  string error = 4;
+}
+
+// WalletData represents a wallet entity
+message WalletData {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  string hashed_seed_phrase = 4;
+  bool is_primary = 5;
+  int64 created_at = 6;
+  int64 updated_at = 7;
+} 

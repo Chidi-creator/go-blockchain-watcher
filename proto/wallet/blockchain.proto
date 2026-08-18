@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package wallet;
+
+option go_package = "bitbucket.org/zapspace/zap-go-server/protoBuilds/wallet";
+
+// BlockchainService handles blockchain-related operations
+service BlockchainService {
+  // GetBalance retrieves the balance for an account
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse) {}
+  
+  // GetTransactionStatus checks the status of a transaction
+  rpc GetTransactionStatus(GetTransactionStatusRequest) returns (GetTransactionStatusResponse) {}
+}
+
+// GetBalanceRequest contains details needed to fetch a balance
+message GetBalanceRequest {
+  string wallet_address = 1;
+  string chain_id = 2;
+  string currency_id = 3;
+}
+
+// GetBalanceResponse contains the balance information
+message GetBalanceResponse {
+  string status = 1;
+  string message = 2;
+  double balance = 3;
+  double usd_value = 4;
+  string error = 5;
+}
+
+// GetTransactionStatusRequest contains transaction hash
+message GetTransactionStatusRequest {
+  string tx_hash = 1;
+  string chain_id = 2;
+}
+
+// GetTransactionStatusResponse contains transaction status information
+message GetTransactionStatusResponse {
+  string status = 1; 
+  string message = 2;
+  TransactionData transaction = 3;
+  string error = 4;
+}
+
+// TransactionData contains details about a blockchain transaction
+message TransactionData {
+  string tx_hash = 1;
+  string from_address = 2;
+  string to_address = 3;
+  double amount = 4;
+  string currency_id = 5;
+  string chain_id = 6;
+  int32 confirmations = 7;
+  string tx_status = 8; // "pending", "confirmed", "failed"
+  int64 timestamp = 9;
+} 

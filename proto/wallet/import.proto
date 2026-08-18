@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package wallet;
+
+option go_package = "bitbucket.org/zapspace/zap-go-server/protoBuilds/wallet";
+
+// AccountImportService handles importing accounts from external services
+service AccountImportService {
+  // ImportAccounts imports a batch of accounts from another service
+  rpc ImportAccounts(ImportAccountsRequest) returns (ImportAccountsResponse) {}
+}
+
+// ImportAccountsRequest contains details of accounts to be imported
+message ImportAccountsRequest {
+  repeated AccountData accounts = 1;
+  string callback_url = 2;
+  string type = 3;
+}
+
+// AccountData contains details of an account to be imported
+// IMPORTANT FOR CLIENT DEVELOPERS:
+// When making requests from JavaScript/TypeScript clients, note that:
+// - The field 'currencyId' on the server side corresponds to 'supportedCurrencyId' in client code
+// - You will need to map 'supportedCurrencyId' to 'currencyId' before making the gRPC call
+// Example client mapping:
+// const grpcData = {
+//   ...clientData,
+//   currencyId: clientData.supportedCurrencyId  // Map the field name
+// };
+message AccountData {
+  string wallet_id = 1;
+  string user_id = 2;
+  string supported_currency_id = 3;
+  string chain_id = 4;
+  string wallet_address = 5;
+  string encrypted_private_key = 6;
+  double balance = 7;
+}
+
+// ImportAccountsResponse contains the result of an import operation
+message ImportAccountsResponse {
+  string status = 1;
+  string message = 2;
+  repeated string imported_account_ids = 3;
+  string error = 4;
+} 

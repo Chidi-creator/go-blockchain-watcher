@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package wallet;
+
+option go_package = "bitbucket.org/zapspace/zap-go-server/protoBuilds/wallet";
+
+// PortfolioService handles portfolio-related operations
+service PortfolioService {
+  // GetWalletPortfolio retrieves portfolio data for a wallet
+  rpc GetWalletPortfolio(GetWalletPortfolioRequest) returns (GetWalletPortfolioResponse) {}
+  
+  // GetAccountPortfolio retrieves portfolio data for an account
+  rpc GetAccountPortfolio(GetAccountPortfolioRequest) returns (GetAccountPortfolioResponse) {}
+}
+
+// GetWalletPortfolioRequest contains wallet ID
+message GetWalletPortfolioRequest {
+  string wallet_id = 1;
+}
+
+// GetWalletPortfolioResponse contains wallet portfolio data
+message GetWalletPortfolioResponse {
+  string status = 1;
+  string message = 2;
+  Portfolio portfolio = 3;
+  string error = 4;
+}
+
+// GetAccountPortfolioRequest contains account ID
+message GetAccountPortfolioRequest {
+  string account_id = 1;
+}
+
+// GetAccountPortfolioResponse contains account portfolio data
+message GetAccountPortfolioResponse {
+  string status = 1;
+  string message = 2;
+  AccountPortfolio account_portfolio = 3;
+  string error = 4;
+}
+
+// Portfolio represents a wallet's portfolio data
+message Portfolio {
+  repeated AccountPortfolio accounts = 1;
+  double wallet_usd_value = 2;
+}
+
+// AccountPortfolio represents an account's portfolio data
+message AccountPortfolio {
+  string account_id = 1;
+  string wallet_address = 2;
+  string chain_id = 3;
+  string currency_id = 4;
+  string symbol = 5;
+  string name = 6;
+  double balance = 7;
+  double usd_value = 8;
+  string icon_url = 9;
+} 

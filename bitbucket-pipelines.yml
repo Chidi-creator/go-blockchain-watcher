@@ -1,0 +1,179 @@
+image: golang:1.20
+
+definitions:
+  caches:
+    go: ~/.go-cache
+
+pipelines:
+  default:
+    - step:
+        name: Build and Test
+        caches:
+          - go
+        script:
+          - go version
+          - go mod download
+          - go build -o changeNow ./cmd/workers/evmChangeNow
+
+  branches:
+    evmChangeNowWorker:
+      - step:
+          name: Build and Package
+          caches:
+            - go
+          script:
+            - go version
+            - go mod download
+            - go build -o evmChangeNow ./cmd/workers/evmChangeNow
+
+            # Install zip utility
+            - apt-get update && apt-get install -y zip
+
+            # Create EB configuration files
+            - mkdir -p .ebextensions
+            - |
+              cat > Procfile << 'EOL'
+              web: ./evmChangeNow --evm-concurrency=2 --changenow-concurrency=5
+              EOL
+            - |
+              cat > .ebextensions/go.config << 'EOL'
+              option_settings:
+                aws:elasticbeanstalk:application:environment:
+                  EVM_CONCURRENCY: 2
+                  CHANGENOW_CONCURRENCY: 5
+              EOL
+
+            # Package for deployment (now with working zip command)
+            - zip -r deployment-package.zip . -x "*.git*" "*.zip" "*test*" "*.md" ".bitbucket/*"
+          artifacts:
+            - deployment-package.zip
+
+      - step:
+          name: Deploy to Elastic Beanstalk
+          script:
+            - pipe: atlassian/aws-elasticbeanstalk-deploy:1.4.1
+              variables:
+                AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+                AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+                AWS_DEFAULT_REGION: "us-east-1"
+                APPLICATION_NAME: "zap-evm-changeNow-worker"
+                ENVIRONMENT_NAME: "Zap-evm-changeNow-worker-env"
+                S3_BUCKET: "zap-test-app-elasticbeanstalk-deployment"
+                ZIP_FILE: "deployment-package.zip"
+                PLATFORM: "Go"
+                ENVIRONMENT_VARIABLES: >-
+                  {
+                    "EVM_CONCURRENCY": "2",
+                    "CHANGENOW_CONCURRENCY": "5",
+                    "SERVER_PORT": "8080",
+                    "SERVER_TIMEOUT": "30s",
+                    "SERVER_READ_TIMEOUT": "15s",
+                    "SERVER_WRITE_TIMEOUT": "15s",
+                    "MONGODB_URI": "${MONGODB_URI}",
+                    "MONGODB_DATABASE": "${MONGODB_DATABASE}",
+                    "LOG_LEVEL": "info",
+                    "REDIS_USERNAME": "${REDIS_USERNAME}",
+                    "REDIS_PASSWORD": "${REDIS_PASSWORD}",
+                    "REDIS_HOST": "${REDIS_HOST}",
+                    "REDIS_PORT": "${REDIS_PORT}",
+                    "BITCOIN_RPC_ENDPOINT": "${BITCOIN_RPC_ENDPOINT}",
+                    "BITCOIN_NETWORK": "${BITCOIN_NETWORK}",
+                    "EVM_ENDPOINTS": "${EVM_ENDPOINTS}",
+                    "SOLANA_ANKR_BASE_URL": "${SOLANA_ANKR_BASE_URL}",
+                    "SOLANA_ANKR_API_KEY": "${SOLANA_ANKR_API_KEY}",
+                    "SOLANA_COMMITMENT": "${SOLANA_COMMITMENT}",
+                    "TRON_API_KEY": "${TRON_API_KEY}",
+                    "TRON_HTTP_ENDPOINT": "${TRON_HTTP_ENDPOINT}",
+                    "TRON_FULL_NODE_URL": "${TRON_FULL_NODE_URL}",
+                    "TRON_API_URL": "${TRON_API_URL}",
+                    "ANKR_API_KEY": "${ANKR_API_KEY}",
+                    "ANKR_BASE_URL": "${ANKR_BASE_URL}",
+                    "SOLANA_RPC_URL": "${SOLANA_RPC_URL}",
+                    "NODE_SERVER_URL": "${NODE_SERVER_URL}",
+                    "NODE_SERVER_AUTH_TOKEN": "${NODE_SERVER_AUTH_TOKEN}",
+                    "NODE_SERVER_USER_ID": "${NODE_SERVER_USER_ID}",
+                    "NODE_SERVER_ENABLED": "${NODE_SERVER_ENABLED}",
+                    "CHANGE_NOW_API_KEY": "${CHANGE_NOW_API_KEY}",
+                    "CHANGE_NOW_API_URL": "${CHANGE_NOW_API_URL}"
+                  }
+    solBtcTrxWorker:
+      - step:
+          name: Build and Package
+          caches:
+            - go
+          script:
+            - go version
+            - go mod download
+            - go build -o solBTCTrx ./cmd/workers/solBTCTrx
+
+            # Install zip utility
+            - apt-get update && apt-get install -y zip
+
+            # Create EB configuration files
+            - mkdir -p .ebextensions
+            - |
+              cat > Procfile << 'EOL'
+              web: ./solBTCTrx --sol-concurrency=2 --btc-concurrency=1 --trx-concurrency=1
+              EOL
+            - |
+              cat > .ebextensions/go.config << 'EOL'
+              option_settings:
+                aws:elasticbeanstalk:application:environment:
+                  SOL_CONCURRENCY: 2
+                  BTC_CONCURRENCY: 1
+                  TRX_CONCURRENCY: 1
+              EOL
+
+            # Package for deployment (now with working zip command)
+            - zip -r deployment-package.zip . -x "*.git*" "*.zip" "*test*" "*.md" ".bitbucket/*"
+          artifacts:
+            - deployment-package.zip
+
+      - step:
+          name: Deploy to Elastic Beanstalk
+          script:
+            - pipe: atlassian/aws-elasticbeanstalk-deploy:1.4.1
+              variables:
+                AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+                AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+                AWS_DEFAULT_REGION: "us-east-1"
+                APPLICATION_NAME: "zap-evm-changeNow-worker"
+                ENVIRONMENT_NAME: "Zap-evm-changeNow-worker-env"
+                S3_BUCKET: "zap-test-app-elasticbeanstalk-deployment"
+                ZIP_FILE: "deployment-package.zip"
+                PLATFORM: "Go"
+                ENVIRONMENT_VARIABLES: >-
+                  {
+                    "EVM_CONCURRENCY": "2",
+                    "CHANGENOW_CONCURRENCY": "5",
+                    "SERVER_PORT": "8080",
+                    "SERVER_TIMEOUT": "30s",
+                    "SERVER_READ_TIMEOUT": "15s",
+                    "SERVER_WRITE_TIMEOUT": "15s",
+                    "MONGODB_URI": "${MONGODB_URI}",
+                    "MONGODB_DATABASE": "${MONGODB_DATABASE}",
+                    "LOG_LEVEL": "info",
+                    "REDIS_USERNAME": "${REDIS_USERNAME}",
+                    "REDIS_PASSWORD": "${REDIS_PASSWORD}",
+                    "REDIS_HOST": "${REDIS_HOST}",
+                    "REDIS_PORT": "${REDIS_PORT}",
+                    "BITCOIN_RPC_ENDPOINT": "${BITCOIN_RPC_ENDPOINT}",
+                    "BITCOIN_NETWORK": "${BITCOIN_NETWORK}",
+                    "EVM_ENDPOINTS": "${EVM_ENDPOINTS}",
+                    "SOLANA_ANKR_BASE_URL": "${SOLANA_ANKR_BASE_URL}",
+                    "SOLANA_ANKR_API_KEY": "${SOLANA_ANKR_API_KEY}",
+                    "SOLANA_COMMITMENT": "${SOLANA_COMMITMENT}",
+                    "TRON_API_KEY": "${TRON_API_KEY}",
+                    "TRON_HTTP_ENDPOINT": "${TRON_HTTP_ENDPOINT}",
+                    "TRON_FULL_NODE_URL": "${TRON_FULL_NODE_URL}",
+                    "TRON_API_URL": "${TRON_API_URL}",
+                    "ANKR_API_KEY": "${ANKR_API_KEY}",
+                    "ANKR_BASE_URL": "${ANKR_BASE_URL}",
+                    "SOLANA_RPC_URL": "${SOLANA_RPC_URL}",
+                    "NODE_SERVER_URL": "${NODE_SERVER_URL}",
+                    "NODE_SERVER_AUTH_TOKEN": "${NODE_SERVER_AUTH_TOKEN}",
+                    "NODE_SERVER_USER_ID": "${NODE_SERVER_USER_ID}",
+                    "NODE_SERVER_ENABLED": "${NODE_SERVER_ENABLED}",
+                    "CHANGE_NOW_API_KEY": "${CHANGE_NOW_API_KEY}",
+                    "CHANGE_NOW_API_URL": "${CHANGE_NOW_API_URL}"
+                  }
